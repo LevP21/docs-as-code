@@ -1,0 +1,172 @@
+
+openapi: 3.0.3
+info:
+  title: Resume Analyzer API
+  description: API для анализа резюме и извлечения навыков, образования и опыта работы.
+  version: 1.0.0
+
+servers:
+  - url: https://example.com/api/v1
+
+paths:
+  /resumes:
+    post:
+      summary: Анализировать резюме
+      description: Извлекает навыки, образование и опыт работы из текста резюме.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
+                  description: Текст резюме для анализа
+                  example: "Python-разработчик. Опыт работы 3 года. Высшее техническое образование."
+
+      responses:
+        '200':
+          description: Анализ резюме выполнен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResult'
+
+        '400':
+          description: Некорректные данные резюме
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: EMPTY_RESUME_TEXT
+                  message:
+                    type: string
+                    example: Текст резюме не должен быть пустым
+
+        '500':
+          description: Внутренняя ошибка при анализе резюме
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: ANALYSIS_ERROR
+                  message:
+                    type: string
+                    example: Не удалось выполнить анализ резюме
+
+    get:
+      summary: Получить список резюме
+      description: Возвращает список загруженных резюме.
+      responses:
+        '200':
+          description: Список резюме получен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resumes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 101
+                        fileName:
+                          type: string
+                          example: resume.pdf
+                        uploadDate:
+                          type: string
+                          format: date
+                          example: '2026-10-25'
+
+        '500':
+          description: Не удалось получить список резюме
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: RESUME_LIST_ERROR
+                  message:
+                    type: string
+                    example: Не удалось получить список резюме
+
+  /resumes/{id}/analysis:
+    get:
+      summary: Получить результат анализа резюме
+      description: Возвращает ранее сохранённые результаты анализа резюме.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Идентификатор резюме
+          schema:
+            type: integer
+          example: 101
+
+      responses:
+        '200':
+          description: Результат анализа найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResult'
+
+        '404':
+          description: Резюме или результат анализа не найден
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: RESUME_NOT_FOUND
+                  message:
+                    type: string
+                    example: Резюме с указанным идентификатором не найдено
+
+components:
+  schemas:
+    AnalysisResult:
+      type: object
+      description: Результат анализа резюме
+      properties:
+        resultId:
+          type: integer
+          description: Идентификатор результата анализа
+          example: 101
+        skills:
+          type: array
+          description: Список извлечённых навыков
+          items:
+            type: string
+          example:
+            - Python
+            - SQL
+            - Git
+        education:
+          type: string
+          description: Информация об образовании
+          example: Высшее техническое образование
+        experience:
+          type: string
+          description: Информация об опыте работы
+          example: 3 года опыта разработки на Python
+        modelVersion:
+          type: string
+          description: Версия ML-модели
+          example: 1.0.0
